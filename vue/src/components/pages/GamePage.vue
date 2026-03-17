@@ -1,5 +1,11 @@
 <template>
   <div class="game-page">
+    <div class="game-page__header">
+      <RouterLink :to="{ name: $routes.MENU }" class="game-page__back">
+        Назад
+      </RouterLink>
+      <div>{{ formattedTimer }}с</div>
+    </div>
     <div class="game-page__flasks">
       <Flask
         v-for="(flask, index) in flasks"
@@ -7,6 +13,7 @@
         :layersCount="MAX_LAYERS"
         :layers="flask.layers"
         :isSelected="selectedFlaskIndex === index"
+        :isDisabled="disabledFlaskIndex === index"
         @onSelect="() => handleFlaskSelect(index)"
       />
     </div>
@@ -22,6 +29,7 @@
 
 <script>
 import Flask from "../ui/Flask.vue"
+import { mapGetters, mapActions } from "vuex"
 
 const MAX_LAYERS = 4
 const FLASKS_COUNT = 4
@@ -36,12 +44,21 @@ export default {
     return {
       flasks: [],
       selectedFlaskIndex: null,
-      MAX_LAYERS: MAX_LAYERS
+      disabledFlaskIndex: null,
+      MAX_LAYERS: MAX_LAYERS,
+      timer: 0,
+      isRunning: false,
+      intervalId: null
     }
   },
   computed: {
+    ...mapGetters("game", ["getDifficulty"]),
+
+    formattedTimer() {
+      return this.timer.toFixed(1, "0")
+    },
     isGameFinished() {
-      return this.flasks.every((flask) => {
+      const isFinish = this.flasks.every((flask) => {
         if (flask.layers.length === 0) {
           return true
         }
@@ -55,9 +72,17 @@ export default {
 
         return false
       })
+
+      if (isFinish) {
+        this.stopGame()
+        return true
+      }
+      return false
     }
   },
   methods: {
+    ...mapActions("game", ["addRecord"]),
+
     startGame() {
       const colorsArray = []
       const newFlasks = []
@@ -92,9 +117,16 @@ export default {
 
       this.flasks = newFlasks
       this.selectedFlaskIndex = null
+      this.shuffleDisabledIndex()
+      this.startTimer()
     },
     resetGame() {
+      this.resetTimer()
       this.startGame()
+    },
+    stopGame() {
+      this.stopTimer()
+      this.addRecord(this.timer)
     },
     handleFlaskSelect(index) {
       if (this.isGameFinished) {
@@ -113,8 +145,25 @@ export default {
         return
       }
 
+      if (
+        this.selectedFlaskIndex !== null &&
+        (this.disabledFlaskIndex === index ||
+          this.selectedFlaskIndex === this.disabledFlaskIndex)
+      ) {
+        this.selectedFlaskIndex = null
+        return
+      }
+
+      this.shuffleDisabledIndex()
       this.transfusion(this.selectedFlaskIndex, index)
       this.selectedFlaskIndex = null
+    },
+    shuffleDisabledIndex() {
+      if (this.getDifficulty === "hard") {
+        const disabledIndex =
+          Math.floor(Math.random() * 100) % this.flasks.length
+        this.disabledFlaskIndex = disabledIndex
+      }
     },
     transfusion(fromIndex, toIndex) {
       const fromFlask = this.flasks[fromIndex]
@@ -170,10 +219,31 @@ export default {
       }
 
       this.flasks = newFlasks
+    },
+    startTimer() {
+      if (this.isRunning) {
+        return
+      }
+
+      this.isRunning = true
+      this.intervalId = setInterval(() => {
+        this.timer += 0.1
+      }, 100)
+    },
+    stopTimer() {
+      clearInterval(this.intervalId)
+      this.isRunning = false
+    },
+    resetTimer() {
+      this.stopTimer()
+      this.timer = 0
     }
   },
   created() {
     this.startGame()
+  },
+  unmounted() {
+    this.resetTimer()
   }
 }
 </script>
@@ -186,6 +256,25 @@ export default {
   flex-direction: column;
   align-items: center;
   padding: 40px;
+
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    margin-bottom: 20px;
+  }
+
+  &__back {
+    color: white;
+    transition: 0.3s;
+    background: none;
+
+    &:hover {
+      translate: -3px 0;
+      opacity: 0.8;
+    }
+  }
 
   &__flasks {
     display: flex;

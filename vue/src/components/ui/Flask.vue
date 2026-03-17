@@ -26,6 +26,10 @@ export default {
     isSelected: {
       type: Boolean,
       required: true
+    },
+    isDisabled: {
+      type: Boolean,
+      required: true
     }
   },
   emits: ["onSelect"],
@@ -45,10 +49,11 @@ export default {
   border-top: none;
   border-bottom-left-radius: 50px;
   border-bottom-right-radius: 50px;
-  cursor: pointer;
+  cursor: v-bind('isDisabled ? "default" : "pointer"');
+  opacity: v-bind('isDisabled ? "0.4" : "1"');
   overflow: hidden;
   transition: 0.3s;
-  transform: v-bind('isSelected ? "translateY(-20px)" : "none"');
+  transform: v-bind('isSelected && !isDisabled? "translateY(-20px)" : "none"');
 
   &__layers {
     position: absolute;
