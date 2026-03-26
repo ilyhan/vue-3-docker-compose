@@ -1,5 +1,18 @@
 <template>
-  <div class="flask" @click="() => handleClick()">
+  <div
+    class="flask"
+    draggable="true"
+    @dragstart="handleDragStart"
+    @dragend="handleDragEnd"
+    @dragover="handleDragOver"
+    @dragleave="handleDragLeave"
+    @drop="handleDrop"
+    @click="() => handleClick()"
+    :class="{
+      'flask--dragging': isDragging,
+      'flask--drag-over': isDragOver
+    }"
+  >
     <div class="flask__layers">
       <div
         v-for="(layer, index) in layers"
@@ -30,12 +43,56 @@ export default {
     isDisabled: {
       type: Boolean,
       required: true
+    },
+    index: {
+      type: Number,
+      required: true
+    },
+    dragIndex: {
+      type: Number,
+      required: false
     }
   },
-  emits: ["onSelect"],
+  emits: ["onSelect", "onReorder", "onSelectDragIndex"],
+  data() {
+    return {
+      isDragging: false,
+      isDragOver: false
+    }
+  },
   methods: {
     handleClick() {
       this.$emit("onSelect")
+    },
+    handleDragStart() {
+      this.isDragging = true
+      this.$emit("onSelectDragIndex", this.index)
+    },
+    handleDragEnd() {
+      this.isDragging = false
+      this.isDragOver = false
+    },
+    handleDragOver(event) {
+      event.preventDefault()
+      this.isDragOver = true
+    },
+    handleDragLeave() {
+      this.isDragOver = false
+    },
+    handleDrop(event) {
+      event.preventDefault()
+
+      const fromIndex = this.dragIndex
+      if (fromIndex === null || this.isDisabled) {
+        return
+      }
+
+      const toIndex = this.index
+      if (fromIndex !== toIndex) {
+        this.$emit("onReorder", toIndex)
+      }
+
+      this.isDragOver = false
     }
   }
 }
@@ -54,6 +111,18 @@ export default {
   overflow: hidden;
   transition: 0.3s;
   transform: v-bind('isSelected && !isDisabled? "translateY(-20px)" : "none"');
+
+  &:active {
+    cursor: grabbing;
+  }
+
+  &--dragging {
+    opacity: 0;
+  }
+
+  &--drag-over {
+    scale: 0.95;
+  }
 
   &__layers {
     position: absolute;
