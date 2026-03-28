@@ -83,7 +83,7 @@ export default {
       event.preventDefault()
 
       const fromIndex = this.dragIndex
-      if (fromIndex === null || this.isDisabled) {
+      if (fromIndex === null) {
         return
       }
 

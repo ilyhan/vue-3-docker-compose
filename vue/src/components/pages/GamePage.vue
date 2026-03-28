@@ -92,14 +92,14 @@ export default {
       const newFlasks = [...this.flasks]
       const movedFlask = newFlasks.splice(this.dragIndex, 1)
       newFlasks.splice(toIndex, 0, ...movedFlask)
+
+      if (this.disabledFlaskIndex !== null) {
+        this.disabledFlaskIndex = toIndex
+      }
       this.flasks = newFlasks
     },
     handleSetDragIndex(index) {
-      if (this.disabledFlaskIndex !== index) {
-        this.dragIndex = index
-      } else {
-        this.dragIndex = null
-      }
+      this.dragIndex = index
     },
     startGame() {
       const colorsArray = []
