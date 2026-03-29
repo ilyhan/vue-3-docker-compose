@@ -14,7 +14,11 @@
         :layers="flask.layers"
         :isSelected="selectedFlaskIndex === index"
         :isDisabled="disabledFlaskIndex === index"
+        :index="index"
+        :dragIndex="dragIndex"
         @onSelect="() => handleFlaskSelect(index)"
+        @onReorder="(toIndex) => handleReorder(toIndex)"
+        @onSelectDragIndex="(dragIndex) => handleSetDragIndex(dragIndex)"
       />
     </div>
     <button
@@ -48,7 +52,8 @@ export default {
       MAX_LAYERS: MAX_LAYERS,
       timer: 0,
       isRunning: false,
-      intervalId: null
+      intervalId: null,
+      dragIndex: null
     }
   },
   computed: {
@@ -83,6 +88,19 @@ export default {
   methods: {
     ...mapActions("game", ["addRecord"]),
 
+    handleReorder(toIndex) {
+      const newFlasks = [...this.flasks]
+      const movedFlask = newFlasks.splice(this.dragIndex, 1)
+      newFlasks.splice(toIndex, 0, ...movedFlask)
+
+      if (this.disabledFlaskIndex !== null) {
+        this.disabledFlaskIndex = toIndex
+      }
+      this.flasks = newFlasks
+    },
+    handleSetDragIndex(index) {
+      this.dragIndex = index
+    },
     startGame() {
       const colorsArray = []
       const newFlasks = []
