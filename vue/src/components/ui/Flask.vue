@@ -2,11 +2,11 @@
   <div
     class="flask"
     draggable="true"
-    @dragstart="handleDragStart"
-    @dragend="handleDragEnd"
-    @dragover="handleDragOver"
-    @dragleave="handleDragLeave"
-    @drop="handleDrop"
+    @dragstart="() => handleDragStart()"
+    @dragend="() => handleDragEnd()"
+    @dragover="(event) => handleDragOver(event)"
+    @dragleave="() => handleDragLeave()"
+    @drop="(event) => handleDrop(event)"
     @click="() => handleClick()"
     :class="{
       'flask--dragging': isDragging,
